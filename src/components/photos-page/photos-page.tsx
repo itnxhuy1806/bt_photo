@@ -6,6 +6,7 @@ import Photos from "@/src/components/photos";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FC, useEffect, useMemo, useState } from "react";
 import { IPhotoItem } from "../photos/photo-item";
+import { useWakeLock } from "react-screen-wake-lock";
 
 export interface IPhotosPageProps {}
 
@@ -34,6 +35,18 @@ const PhotosPage: FC<IPhotosPageProps> = () => {
     router.push(`${pathname}?page=${currentPage}`, { scroll: true });
   };
 
+  const { isSupported, released, release, request } = useWakeLock({
+    onRequest: () => console.log("Screen Wake Lock: requested!"),
+    onError: () => console.log("An error happened 💥"),
+    onRelease: () => console.log("Screen Wake Lock: released!"),
+  });
+
+  useEffect(() => {
+    request().then(() => {
+      console.log("release");
+    });
+  }, []);
+
   useEffect(() => {
     photoApi.getPhotos(filter).then(({ data }) => {
       setPhotos(data.data);
@@ -44,6 +57,8 @@ const PhotosPage: FC<IPhotosPageProps> = () => {
   return (
     <>
       <Title title="Photo" />
+      {released === true ? "Release" : "Request"}
+      {isSupported === true ? "isSupported" : "No isSupported"}
       <Photos className="mt-2">
         <Photos.Filter className="mt-2" value={searchValue} onTextChange={handleFilterTextChange} />
         <Photos.List className="mt-2" items={photos} />
